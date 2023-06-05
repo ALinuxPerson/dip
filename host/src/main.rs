@@ -74,7 +74,8 @@ async fn try_main() -> anyhow::Result<()> {
         remote_address,
         "unix socket",
         "remote client",
-        ServeHooks::default(),
+        ServeHooks::default()
+            .on_stream_connect_fail(|_| tracing::warn!("is the remote client currently on right now?")),
     )
     .await
 }
