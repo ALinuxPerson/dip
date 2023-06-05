@@ -64,11 +64,43 @@ Example configurations of `host.toml` and `remote.toml` can be found here: [host
 
 # Usage
 
+`dip_remote` should be launched first on the remote computer, then `dip_host` can be launched on the host computer.
+
 ## Host
+
+Launch `dip_host` with remote address passed in either the arguments (through -r / --remote-address) or configuration
+file. It must match the address given by `dip_remote`. 
+
+`dip_host` will tell you what remote address will be used to connect. See this sample log output to find out where it 
+is:
+
+```
+2023-06-05T13:29:26.121833Z  INFO dip_host: socket path is /run/user/1000/discord-ipc-0
+2023-06-05T13:29:26.121846Z  INFO dip_host: remote address to connect to remote_address=192.168.86.32:49131 // <-- this is the remote address
+2023-06-05T13:29:26.121851Z  INFO dip_host: successfully resolved configuration
+```
 
 ## Remote
 
+Launch `dip_remote`. It should not take any arguments. If you want to set a port, you can pass the -p or --port 
+argument.
+
+Upon launch, `dip_remote` should tell you the remote address which will be used by `dip_host`. It will be given in IPv4,
+and IPv6 if possible. Use the IPv4 address first, then use IPv6. See this sample log output to find out where it is:
+
+```
+2023-06-05T13:32:21.774508Z  INFO dip_remote: socket path is /run/user/1000/discord-ipc-0
+2023-06-05T13:32:21.774534Z  INFO dip_remote: port to listen on port=49131
+2023-06-05T13:32:21.774540Z  INFO dip_remote: successfully resolved configuration
+2023-06-05T13:32:21.774694Z  INFO dip_remote: remote ipv4 address is 192.168.86.32:49131 // <---------- use these two
+2023-06-05T13:32:21.774744Z  INFO dip_remote: remote ipv6 address is [::ffff:192.168.86.32]:49131 // <- addresses
+```
+
 # Terminologies
+
+**Host Computer**: The computer which will run the host binary.
+
+**Remote Computer**: The computer which will run the remote binary.
 
 # License
 
