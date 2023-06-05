@@ -8,6 +8,17 @@ pub mod utils;
 #[cfg(windows)]
 mod win;
 
+#[cfg(unix)]
+mod unix {
+    use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf};
+
+    impl_ReadFrom_for!(OwnedReadHalf);
+    impl_ReadFrom_for!(lt ReadHalf);
+
+    impl_WriteTo_for!(OwnedWriteHalf);
+    impl_WriteTo_for!(lt WriteHalf);
+}
+
 use anyhow::Context;
 use async_trait::async_trait;
 pub use dirs::dirs;
@@ -15,14 +26,7 @@ pub use serve::serve;
 use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::{env, io};
-use tokio::net::tcp::{
-    OwnedReadHalf as OwnedTcpReadHalf, OwnedWriteHalf as OwnedTcpWriteHalf,
-    ReadHalf as TcpReadHalf, WriteHalf as TcpWriteHalf,
-};
-use tokio::net::unix::{
-    OwnedReadHalf as OwnedUnixReadHalf, OwnedWriteHalf as OwnedUnixWriteHalf,
-    ReadHalf as UnixReadHalf, WriteHalf as UnixWriteHalf,
-};
+use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf};
 
 pub const DEFAULT_PORT: u16 = 49131;
 
@@ -76,10 +80,8 @@ pub trait ReadFrom: Sync {
     }
 }
 
-impl_ReadFrom_for!(OwnedTcpReadHalf);
-impl_ReadFrom_for!(OwnedUnixReadHalf);
-impl_ReadFrom_for!(lt TcpReadHalf);
-impl_ReadFrom_for!(lt UnixReadHalf);
+impl_ReadFrom_for!(OwnedReadHalf);
+impl_ReadFrom_for!(lt ReadHalf);
 
 #[async_trait]
 pub trait WriteTo: Sync {
@@ -125,11 +127,8 @@ pub trait WriteTo: Sync {
     }
 }
 
-
-impl_WriteTo_for!(OwnedTcpWriteHalf);
-impl_WriteTo_for!(OwnedUnixWriteHalf);
-impl_WriteTo_for!(lt TcpWriteHalf);
-impl_WriteTo_for!(lt UnixWriteHalf);
+impl_WriteTo_for!(OwnedWriteHalf);
+impl_WriteTo_for!(lt WriteHalf);
 
 pub fn find_socket(mut test_fn: impl FnMut(&Path) -> bool) -> Option<PathBuf> {
     let tmp_path = env::var_os("XDG_RUNTIME_DIR")
