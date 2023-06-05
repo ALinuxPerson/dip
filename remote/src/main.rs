@@ -36,6 +36,13 @@ pub fn find_existing_socket() -> Option<PathBuf> {
     dip_common::find_socket(|socket_path| socket_path.exists())
 }
 
+fn fetch_local_ip(fetch_fn: impl FnOnce() -> Result<IpAddr, local_ip_address::Error>, port: u16, ip_type: &str) {
+    match fetch_fn() {
+        Ok(ip_address) => tracing::info!("remote {ip_type} address is {ip_address}:{port}"),
+        Err(error) => tracing::warn!("failed to retrieve local {ip_type} address: {error}"),
+    }
+}
+
 async fn try_main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
     dip_common::dirs::initialize()?;
@@ -54,6 +61,9 @@ async fn try_main() -> anyhow::Result<()> {
 
     tracing::info!("successfully resolved configuration");
     drop(span);
+
+    fetch_local_ip(local_ip_address::local_ip, port, "ipv4");
+    fetch_local_ip(local_ip_address::local_ipv6, port, "ipv6");
 
     dip_common::serve::<TcpListener, UnixStream, _, _>(
         SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port),
