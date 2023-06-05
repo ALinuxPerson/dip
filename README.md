@@ -18,13 +18,14 @@ something akin to this project, but, alas, I've found none. Due to this, I decid
 ## Instructions
 
 1. Go to releases and download the package meant for your operating system.
-    * There are two binaries packaged for each operating system, the host and remote. Here are explanations for what
-      they mean:
-      * **Host**: This is meant to be run on the computer which isn't running Discord. It will forward all requests to 
-                  the remote, and all responses from the remote to the socket.
-      * **Remote**: This is meant to be run on the computer which is running Discord. It will forward all requests from
-                    the host to the Discord IPC, and all responses from Discord IPC to the host.
-2. Link up your host and remote.
+    * There are two binaries packaged for each operating system, the host and remote. Here is information as to which
+      program is meant to be run on which computer.
+     
+      * **Host**: This is meant to be run on the computer which isn't running Discord. 
+      * **Remote**: This is meant to be run on the computer which is running Discord. 
+    
+      For more information, see the terminologies section.
+2. Link up your host computer and remote computer.
    * First, ensure that the two computers are on the same local area network.
    * Then, launch `dip_remote` on your remote. It should tell you the remote address (both IPv4 and IPv6). Try the IPv4
      address first, and if it doesn't work, use the IPv6 address. Make sure Discord is open!
@@ -97,6 +98,14 @@ and IPv6 if possible. Use the IPv4 address first, then use IPv6. See this sample
 ```
 
 # Terminologies
+
+**Host**: The computer which will receive all requests from a "fake" or proxy socket and forward them to the remote 
+          through TCP. Responses from the remote will be sent to the proxy socket. This is the computer which doesn't 
+          have Discord open.
+
+**Remote**: The computer which will receive all requests from the host and relay them to a real Discord IPC socket. 
+            Responses from the real socket will be sent to the host through TCP. This is the computer which has Discord 
+            open.
 
 **Host Computer**: The computer which will run the host binary.
 
