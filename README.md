@@ -99,17 +99,22 @@ and IPv6 if possible. Use the IPv4 address first, then use IPv6. See this sample
 
 # Terminologies
 
-**Host**: The computer which will receive all requests from a "fake" or proxy socket and forward them to the remote 
-          through TCP. Responses from the remote will be sent to the proxy socket. This is the computer which doesn't 
-          have Discord open.
+**Host**: The computer which will receive all requests from the virtual socket and forward them to the remote through TCP. 
+          This is the computer which doesn't have Discord open.
 
-**Remote**: The computer which will receive all requests from the host and relay them to a real Discord IPC socket. 
-            Responses from the real socket will be sent to the host through TCP. This is the computer which has Discord 
-            open.
+**Remote**: The computer which will receive all requests from the host and relay them to a real socket. Responses from
+            the real socket will be sent to the host through TCP. This is the computer which has Discord open.
 
 **Host Computer**: The computer which will run the host binary.
 
 **Remote Computer**: The computer which will run the remote binary.
+
+**Virtual Socket**: The fake socket created by the host binary which will forward all requests to the remote. Responses
+                    coming from the remote will be sent to this socket as well.
+
+**Real Socket**: The real Discord IPC socket created by a running Discord client. The remote connects to this socket and
+                 forwards all requests from the host to this socket. Responses coming from this socket will be sent to
+                 the host.
 
 # License
 
