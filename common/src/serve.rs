@@ -52,6 +52,7 @@ use std::net::SocketAddr;
 use std::path::Display as DisplayablePath;
 use std::path::{Path, PathBuf};
 use tokio::net::{tcp, TcpListener, TcpStream, ToSocketAddrs};
+use tokio::sync::mpsc;
 
 #[async_trait]
 pub trait ServableListener<S: Send + 'static>: Sized {
@@ -163,6 +164,7 @@ async fn read_then_send_worker<R, W>(
     write_to: &W,
     read_from_name: &str,
     write_to_name: &str,
+    finished_receiver: mpsc::Sender<()>,
 )
 where
     R: ReadFrom,
@@ -183,6 +185,8 @@ where
             tracing::debug!(
                         "finished reading from {read_from_name} and sending to {write_to_name}"
                     );
+
+            finished_receiver.send(()).await.unwrap();
             break;
         }
     }
@@ -228,6 +232,8 @@ where
         };
 
         let (stream_read_half, stream_write_half) = stream.into_split();
+        let (nc2s_finished_sender, mut nc2s_finished_receiver) = mpsc::channel(1);
+        let (s2nc_finished_sender, mut s2nc_finished_receiver) = mpsc::channel(1);
 
         tracing::debug!("created new connection to {stream_name}");
 
@@ -238,6 +244,7 @@ where
                 &stream_write_half,
                 new_client_name,
                 stream_name,
+                nc2s_finished_sender,
             ).await
         });
 
@@ -248,7 +255,25 @@ where
                 &new_client_write_half,
                 stream_name,
                 new_client_name,
+                s2nc_finished_sender,
             ).await
+        });
+
+        tokio::spawn(async move {
+            let mut nc2s_finished = false;
+            let mut s2nc_finished = false;
+
+            loop {
+                tokio::select! {
+                    Some(()) = nc2s_finished_receiver.recv() => nc2s_finished = true,
+                    Some(()) = s2nc_finished_receiver.recv() => s2nc_finished = true,
+                }
+
+                if nc2s_finished && s2nc_finished {
+                    tracing::info!("connection to {stream_name} closed");
+                    break
+                }
+            }
         });
     }
 }
