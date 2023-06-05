@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpListener, UnixStream};
 use dip_common::DEFAULT_PORT;
+use dip_common::serve::ServeHooks;
 
 /// Remote program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
@@ -71,8 +72,9 @@ async fn try_main() -> anyhow::Result<()> {
         socket_path,
         "host server",
         "discord ipc",
-    )
-    .await
+        ServeHooks::default()
+            .on_stream_connect_fail(|_| tracing::warn!("was discord open then closed?")),
+    ).await
 }
 
 #[tokio::main]
