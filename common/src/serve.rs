@@ -59,7 +59,7 @@ pub trait ServableStream<S: Send + 'static>: Sized {
 
     async fn connect(socket: S) -> io::Result<Self>;
     fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf);
-    fn split<'a>(&'a mut self) -> (Self::ReadHalf<'a>, Self::WriteHalf<'a>);
+    fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>);
 }
 
 #[async_trait]
@@ -77,7 +77,7 @@ impl<S: AsRef<Path> + Send + 'static> ServableStream<S> for UnixStream {
         UnixStream::into_split(self)
     }
 
-    fn split<'a>(&'a mut self) -> (Self::ReadHalf<'a>, Self::WriteHalf<'a>) {
+    fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>) {
         UnixStream::split(self)
     }
 }
@@ -97,7 +97,7 @@ impl<S: ToSocketAddrs + Send + 'static> ServableStream<S> for TcpStream {
         TcpStream::into_split(self)
     }
 
-    fn split<'a>(&'a mut self) -> (Self::ReadHalf<'a>, Self::WriteHalf<'a>) {
+    fn split(&'_ mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>) {
         TcpStream::split(self)
     }
 }
@@ -107,13 +107,13 @@ pub trait Displayable {
     where
         Self: 'd;
 
-    fn display<'d>(&'d self) -> Self::Display<'d>;
+    fn display(&self) -> Self::Display<'_>;
 }
 
 impl Displayable for PathBuf {
     type Display<'d> = DisplayablePath<'d> where Self: 'd;
 
-    fn display<'d>(&'d self) -> Self::Display<'d> {
+    fn display(&self) -> Self::Display<'_> {
         Path::display(self)
     }
 }
@@ -124,7 +124,7 @@ macro_rules! impl_Displayable {
         impl Displayable for $ty {
             type Display<'d> = &'d $ty;
 
-            fn display<'d>(&'d self) -> Self::Display<'d> {
+            fn display(&self) -> Self::Display<'_> {
                 self
             }
         }
