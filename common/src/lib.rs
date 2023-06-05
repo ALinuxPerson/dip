@@ -11,18 +11,6 @@ mod macros {
             }
         };
     }
-
-    macro_rules! write_all_or_break {
-        ($var:expr, $buf:expr, $error_message:expr) => {
-            match $var.write_all_or_break($buf).await {
-                ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
-                ControlFlow::Continue(Ok(())) => (),
-                ControlFlow::Continue(Err(error)) => {
-                    return ControlFlow::Break(Err(error).context($error_message))
-                }
-            }
-        };
-    }
 }
 
 pub mod dirs;
