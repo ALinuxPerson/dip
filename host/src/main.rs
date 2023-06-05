@@ -1,5 +1,5 @@
-mod utils;
 mod dirs;
+mod utils;
 
 use crate::utils::MaybeSocketAddr;
 use anyhow::Context;
