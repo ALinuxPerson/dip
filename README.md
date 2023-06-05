@@ -40,6 +40,8 @@ something akin to this project, but, alas, I've found none. Due to this, I decid
 
 ## Configuration
 
+The configuration resolves in the following order: arguments passed, configuration files.
+
 Here are the locations of `host.toml` and `remote.toml` depending on operating system.
 
 * Linux
