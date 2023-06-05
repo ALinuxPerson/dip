@@ -1,0 +1,5 @@
+## The port to accept incoming connections to. If not specified, it will default to 49131.
+# port = 49131
+
+## The location of the Discord IPC path. If not specified, it will be automatically detected.
+# discord_ipc_path = "/run/user/1000/discord-ipc-0"

@@ -16,7 +16,7 @@ use dip_common::serve::ServeHooks;
 /// Host program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
 pub struct Config {
-    /// The location of the Discord IPC path. If not specified, it will automatically detect it.
+    /// The location of the Discord IPC path. If not specified, it will be automatically detected.
     #[clap(short = 'p', long)]
     pub discord_ipc_path: Option<PathBuf>,
 
