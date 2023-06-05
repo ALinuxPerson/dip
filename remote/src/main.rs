@@ -19,7 +19,7 @@ pub struct Config {
     #[clap(short = 'P', long)]
     pub port: Option<u16>,
 
-    /// The location of the Discord IPC path. If not specified, it will automatically detect it.
+    /// The location of the Discord IPC path. If not specified, it will be automatically detected.
     #[clap(short = 'p', long)]
     pub discord_ipc_path: Option<PathBuf>,
 }
