@@ -1,24 +1,25 @@
 mod utils;
 mod dirs {
-    use std::path::{Path, PathBuf};
     use once_cell::sync::Lazy;
+    use std::path::{Path, PathBuf};
 
-    static HOST_TOML: Lazy<PathBuf> = Lazy::new(|| dip_common::dirs().config_dir().join("host.toml"));
+    static HOST_TOML: Lazy<PathBuf> =
+        Lazy::new(|| dip_common::dirs().config_dir().join("host.toml"));
 
     pub fn host_toml() -> &'static Path {
         &HOST_TOML
     }
 }
 
-use std::path::PathBuf;
-use std::process::ExitCode;
+use crate::utils::MaybeSocketAddr;
 use anyhow::Context;
 use clap::Parser;
-use figment::Figment;
 use figment::providers::{Format, Serialized, Toml};
+use figment::Figment;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use std::process::ExitCode;
 use tokio::net::{TcpStream, UnixListener};
-use crate::utils::MaybeSocketAddr;
 
 /// Host program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
@@ -52,12 +53,21 @@ async fn try_main() -> anyhow::Result<()> {
 
     let span = tracing::info_span!("resolve config");
     let config = Config::read()?;
-    let socket_path = config.discord_ipc_path
+    let socket_path = config
+        .discord_ipc_path
         .or_else(find_available_socket)
         .context("no more available sockets available (too many discord clients open?)")?;
     tracing::info!("socket path is {}", socket_path.display());
 
-    let remote_address = config.remote_address.with_context(|| format!("the remote address must be passed in either the arguments or the config ('{}')", dirs::host_toml().display()))?.with_port(49131);
+    let remote_address = config
+        .remote_address
+        .with_context(|| {
+            format!(
+                "the remote address must be passed in either the arguments or the config ('{}')",
+                dirs::host_toml().display()
+            )
+        })?
+        .with_port(49131);
     tracing::info!(%remote_address, "remote address to connect to");
 
     tracing::info!("successfully resolved configuration");
@@ -72,7 +82,8 @@ async fn try_main() -> anyhow::Result<()> {
         remote_address,
         "unix socket",
         "remote client",
-    ).await
+    )
+    .await
 }
 
 #[tokio::main]

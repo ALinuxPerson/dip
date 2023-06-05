@@ -1,20 +1,23 @@
-use std::net::{IpAddr, SocketAddr};
-use std::str::FromStr;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use anyhow::Context;
+use fs_err::tokio as fs;
 use serde::de::Error;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::future::Future;
+use std::net::{IpAddr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::process;
-use anyhow::Context;
+use std::str::FromStr;
 use tokio::signal::unix;
 use tokio::signal::unix::SignalKind;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedReceiver;
-use fs_err::tokio as fs;
 
-fn multiple_signals(signals: impl IntoIterator<Item = SignalKind>) -> anyhow::Result<UnboundedReceiver<()>> {
+fn multiple_signals(
+    signals: impl IntoIterator<Item = SignalKind>,
+) -> anyhow::Result<UnboundedReceiver<()>> {
     let (sender, receiver) = mpsc::unbounded_channel();
-    let signals = signals.into_iter()
+    let signals = signals
+        .into_iter()
         .map(unix::signal)
         .collect::<Result<Vec<_>, _>>()
         .context("failed to register all signals")?;
@@ -27,7 +30,7 @@ fn multiple_signals(signals: impl IntoIterator<Item = SignalKind>) -> anyhow::Re
                 if signal.recv().await.is_some() {
                     sender.send(()).unwrap();
                 } else {
-                    break
+                    break;
                 }
             }
         });
@@ -54,9 +57,15 @@ impl Drop for DestroyPathOnDrop {
     }
 }
 
-pub fn destroy_path_on_termination(path: PathBuf) -> anyhow::Result<(DestroyPathOnDrop, impl Future<Output = ()>)> {
-    let mut signals = multiple_signals([SignalKind::terminate(), SignalKind::interrupt(), SignalKind::quit()])
-        .context("failed to register SIGTERM, SIGINT, and SIGQUIT signals")?;
+pub fn destroy_path_on_termination(
+    path: PathBuf,
+) -> anyhow::Result<(DestroyPathOnDrop, impl Future<Output = ()>)> {
+    let mut signals = multiple_signals([
+        SignalKind::terminate(),
+        SignalKind::interrupt(),
+        SignalKind::quit(),
+    ])
+    .context("failed to register SIGTERM, SIGINT, and SIGQUIT signals")?;
 
     tracing::debug!("destroy path {} on termination", path.display());
 
@@ -86,7 +95,10 @@ impl MaybeSocketAddr {
 }
 
 impl Serialize for MaybeSocketAddr {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         if let Some(socket_addr) = self.to_socket_addr() {
             socket_addr.serialize(serializer)
         } else {
@@ -96,9 +108,15 @@ impl Serialize for MaybeSocketAddr {
 }
 
 impl<'de> Deserialize<'de> for MaybeSocketAddr {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        Self::from_str(&String::deserialize(deserializer)?)
-            .map_err(|e| D::Error::custom(format!("socket address or ip address could not be deserialized successfully: {e}")))
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Self::from_str(&String::deserialize(deserializer)?).map_err(|e| {
+            D::Error::custom(format!(
+                "socket address or ip address could not be deserialized successfully: {e}"
+            ))
+        })
     }
 }
 
@@ -106,21 +124,28 @@ impl FromStr for MaybeSocketAddr {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        SocketAddr::from_str(s)
-            .map(Self::from)
-            .or_else(|_| Ok(Self::from(IpAddr::from_str(s)
-                .context("failed to parse ip address")?)))
+        SocketAddr::from_str(s).map(Self::from).or_else(|_| {
+            Ok(Self::from(
+                IpAddr::from_str(s).context("failed to parse ip address")?,
+            ))
+        })
     }
 }
 
 impl From<SocketAddr> for MaybeSocketAddr {
     fn from(value: SocketAddr) -> Self {
-        Self { address: value.ip(), port: Some(value.port()) }
+        Self {
+            address: value.ip(),
+            port: Some(value.port()),
+        }
     }
 }
 
 impl From<IpAddr> for MaybeSocketAddr {
     fn from(value: IpAddr) -> Self {
-        Self { address: value, port: None }
+        Self {
+            address: value,
+            port: None,
+        }
     }
 }

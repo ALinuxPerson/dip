@@ -1,22 +1,23 @@
 mod dirs {
-    use std::path::{Path, PathBuf};
     use once_cell::sync::Lazy;
+    use std::path::{Path, PathBuf};
 
-    static REMOTE_TOML: Lazy<PathBuf> = Lazy::new(|| dip_common::dirs().config_dir().join("remote.toml"));
+    static REMOTE_TOML: Lazy<PathBuf> =
+        Lazy::new(|| dip_common::dirs().config_dir().join("remote.toml"));
 
     pub fn remote_toml() -> &'static Path {
         &REMOTE_TOML
     }
 }
 
+use anyhow::Context;
+use clap::Parser;
+use figment::providers::{Format, Serialized, Toml};
+use figment::Figment;
+use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::process::ExitCode;
-use anyhow::Context;
-use clap::Parser;
-use figment::Figment;
-use figment::providers::{Format, Serialized, Toml};
-use serde::{Deserialize, Serialize};
 use tokio::net::{TcpListener, UnixStream};
 
 /// Remote program for DIP.
@@ -52,7 +53,8 @@ async fn try_main() -> anyhow::Result<()> {
     let span = tracing::info_span!("resolve config");
     let config = Config::read()?;
 
-    let socket_path = config.discord_ipc_path
+    let socket_path = config
+        .discord_ipc_path
         .or_else(find_existing_socket)
         .context("no existing sockets are available (is discord open?)")?;
     tracing::info!("socket path is {}", socket_path.display());
@@ -68,7 +70,8 @@ async fn try_main() -> anyhow::Result<()> {
         socket_path,
         "host server",
         "discord ipc",
-    ).await
+    )
+    .await
 }
 
 #[tokio::main]

@@ -3,9 +3,11 @@ mod macros {
     macro_rules! read_exact_or_break {
         ($var:expr, $buf:expr, $error_message:expr) => {
             match $var.read_exact_or_break($buf).await {
-               ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
-               ControlFlow::Continue(Ok(())) => (),
-               ControlFlow::Continue(Err(error)) => return ControlFlow::Break(Err(error).context($error_message)),
+                ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
+                ControlFlow::Continue(Ok(())) => (),
+                ControlFlow::Continue(Err(error)) => {
+                    return ControlFlow::Break(Err(error).context($error_message))
+                }
             }
         };
     }
@@ -13,9 +15,11 @@ mod macros {
     macro_rules! write_all_or_break {
         ($var:expr, $buf:expr, $error_message:expr) => {
             match $var.write_all_or_break($buf).await {
-               ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
-               ControlFlow::Continue(Ok(())) => (),
-               ControlFlow::Continue(Err(error)) => return ControlFlow::Break(Err(error).context($error_message)),
+                ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
+                ControlFlow::Continue(Ok(())) => (),
+                ControlFlow::Continue(Err(error)) => {
+                    return ControlFlow::Break(Err(error).context($error_message))
+                }
             }
         };
     }
@@ -27,7 +31,9 @@ pub mod utils {
     use std::future::Future;
     use std::process::ExitCode;
 
-    pub async fn try_main<F: Future<Output = anyhow::Result<()>>>(main_fn: impl FnOnce() -> F) -> ExitCode {
+    pub async fn try_main<F: Future<Output = anyhow::Result<()>>>(
+        main_fn: impl FnOnce() -> F,
+    ) -> ExitCode {
         if let Err(error) = main_fn().await {
             tracing::error!("{error:#}");
             ExitCode::FAILURE
@@ -37,25 +43,21 @@ pub mod utils {
     }
 }
 
-pub use serve::serve;
+use anyhow::Context;
+use async_trait::async_trait;
 pub use dirs::dirs;
-use std::{env, io};
+pub use serve::serve;
 use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
-use async_trait::async_trait;
+use std::{env, io};
 use tokio::net::tcp::{
-    OwnedReadHalf as OwnedTcpReadHalf,
-    OwnedWriteHalf as OwnedTcpWriteHalf,
-    ReadHalf as TcpReadHalf,
-    WriteHalf as TcpWriteHalf,
+    OwnedReadHalf as OwnedTcpReadHalf, OwnedWriteHalf as OwnedTcpWriteHalf,
+    ReadHalf as TcpReadHalf, WriteHalf as TcpWriteHalf,
 };
 use tokio::net::unix::{
-    OwnedReadHalf as OwnedUnixReadHalf,
-    OwnedWriteHalf as OwnedUnixWriteHalf,
-    ReadHalf as UnixReadHalf,
-    WriteHalf as UnixWriteHalf,
+    OwnedReadHalf as OwnedUnixReadHalf, OwnedWriteHalf as OwnedUnixWriteHalf,
+    ReadHalf as UnixReadHalf, WriteHalf as UnixWriteHalf,
 };
-use anyhow::Context;
 
 #[async_trait]
 pub trait ReadFrom: Sync {
@@ -76,7 +78,10 @@ pub trait ReadFrom: Sync {
         }
 
         if !buf.is_empty() {
-            Err(io::Error::new(io::ErrorKind::UnexpectedEof, "failed to fill whole buffer"))
+            Err(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "failed to fill whole buffer",
+            ))
         } else {
             Ok(())
         }
@@ -118,7 +123,7 @@ macro_rules! impl_ReadFrom_for {
             }
         }
     };
-    
+
     (lt $ty:ident) => {
         #[async_trait]
         impl<'a> ReadFrom for $ty<'a> {
@@ -196,7 +201,7 @@ macro_rules! impl_WriteTo_for {
             }
         }
     };
-    
+
     (lt $ty:ident) => {
         #[async_trait]
         impl<'a> WriteTo for $ty<'a> {
@@ -230,9 +235,18 @@ pub fn find_socket(mut test_fn: impl FnMut(&Path) -> bool) -> Option<PathBuf> {
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn read_from_then_write_to<R: ReadFrom, W: WriteTo>(read_from: &R, write_to: &W, read_from_name: &str, write_to_name: &str) -> ControlFlow<anyhow::Result<()>> {
+pub async fn read_from_then_write_to<R: ReadFrom, W: WriteTo>(
+    read_from: &R,
+    write_to: &W,
+    read_from_name: &str,
+    write_to_name: &str,
+) -> ControlFlow<anyhow::Result<()>> {
     let mut header_buffer = [0; 8];
-    read_exact_or_break!(read_from, &mut header_buffer, "failed to read header buffer");
+    read_exact_or_break!(
+        read_from,
+        &mut header_buffer,
+        "failed to read header buffer"
+    );
 
     let header = u64::from_le_bytes(header_buffer);
     tracing::debug!(?header, "buffer");
@@ -247,11 +261,16 @@ pub async fn read_from_then_write_to<R: ReadFrom, W: WriteTo>(read_from: &R, wri
     let mut packet = Vec::with_capacity(8 + length as usize);
     packet.extend(header_buffer);
     packet.extend(json_content);
-    tracing::trace!("{read_from_name} -> {write_to_name}: \"{}\"", String::from_utf8_lossy(&packet));
+    tracing::trace!(
+        "{read_from_name} -> {write_to_name}: \"{}\"",
+        String::from_utf8_lossy(&packet)
+    );
 
     match write_to.write_all_or_break(&packet).await {
         ControlFlow::Break(()) => ControlFlow::Break(Ok(())),
         ControlFlow::Continue(Ok(())) => ControlFlow::Continue(()),
-        ControlFlow::Continue(Err(error)) => ControlFlow::Break(Err(error).context("failed to write packet")),
+        ControlFlow::Continue(Err(error)) => {
+            ControlFlow::Break(Err(error).context("failed to write packet"))
+        }
     }
 }

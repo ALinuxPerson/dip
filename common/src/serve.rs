@@ -1,15 +1,13 @@
-use std::fmt::{Debug, Display};
-use std::{io, thread};
-use std::net::SocketAddr;
-use std::ops::ControlFlow;
-use std::path::{Path, PathBuf};
+use crate::{ReadFrom, WriteTo};
 use anyhow::Context;
 use async_trait::async_trait;
-use tokio::net::{tcp, TcpListener, TcpStream, ToSocketAddrs, unix, UnixListener, UnixStream};
-use tokio::net::unix::SocketAddr as UnixSocketAddr;
+use std::fmt::{Debug, Display};
+use std::io;
+use std::net::SocketAddr;
 use std::path::Display as DisplayablePath;
-use std::time::Duration;
-use crate::{ReadFrom, WriteTo};
+use std::path::{Path, PathBuf};
+use tokio::net::unix::SocketAddr as UnixSocketAddr;
+use tokio::net::{tcp, unix, TcpListener, TcpStream, ToSocketAddrs, UnixListener, UnixStream};
 
 #[async_trait]
 pub trait ServableListener<S: Send + 'static>: Sized {
@@ -52,8 +50,12 @@ impl<S: ToSocketAddrs + Send + 'static> ServableListener<S> for TcpListener {
 pub trait ServableStream<S: Send + 'static>: Sized {
     type OwnedReadHalf: ReadFrom + Send + 'static;
     type OwnedWriteHalf: WriteTo + Send + 'static;
-    type ReadHalf<'a>: ReadFrom + Send where Self: 'a;
-    type WriteHalf<'a>: WriteTo + Send where Self: 'a;
+    type ReadHalf<'a>: ReadFrom + Send
+    where
+        Self: 'a;
+    type WriteHalf<'a>: WriteTo + Send
+    where
+        Self: 'a;
 
     async fn connect(socket: S) -> io::Result<Self>;
     fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf);
@@ -101,7 +103,9 @@ impl<S: ToSocketAddrs + Send + 'static> ServableStream<S> for TcpStream {
 }
 
 pub trait Displayable {
-    type Display<'d>: Display where Self: 'd;
+    type Display<'d>: Display
+    where
+        Self: 'd;
 
     fn display<'d>(&'d self) -> Self::Display<'d>;
 }
@@ -114,6 +118,7 @@ impl Displayable for PathBuf {
     }
 }
 
+#[allow(non_snake_case)]
 macro_rules! impl_Displayable {
     ($ty:ty) => {
         impl Displayable for $ty {
@@ -128,7 +133,12 @@ macro_rules! impl_Displayable {
 
 impl_Displayable!(SocketAddr);
 
-pub async fn serve<L, S, LS, SS>(listener_bind_to: LS, stream_connect_to: SS, new_client_name: &'static str, stream_name: &'static str) -> anyhow::Result<()>
+pub async fn serve<L, S, LS, SS>(
+    listener_bind_to: LS,
+    stream_connect_to: SS,
+    new_client_name: &'static str,
+    stream_name: &'static str,
+) -> anyhow::Result<()>
 where
     LS: Displayable + Send + 'static,
     L: ServableListener<LS>,
@@ -141,13 +151,18 @@ where
     let listener = L::bind(listener_bind_to).await.context(error_message)?;
 
     loop {
-        let (stream, addr) = listener.accept().await.context("failed to accept new connection")?;
+        let (stream, addr) = listener
+            .accept()
+            .await
+            .context("failed to accept new connection")?;
         let (new_client_read_half, new_client_write_half) = stream.into_split();
         tracing::info!(?addr, "new connection from {new_client_name} incoming");
 
         tracing::debug!("creating new connection to {stream_name}");
         let error_message = format!("failed to connect to {}", stream_connect_to.display());
-        let mut stream = S::connect(stream_connect_to.clone()).await.context(error_message)?;
+        let mut stream = S::connect(stream_connect_to.clone())
+            .await
+            .context(error_message)?;
 
         let (stream_read_half, stream_write_half) = stream.into_split();
 
@@ -158,9 +173,19 @@ where
             tracing::trace!("new client->stream worker started");
 
             loop {
-                if crate::read_from_then_write_to(&new_client_read_half, &stream_write_half, new_client_name, stream_name).await.is_break() {
-                    tracing::debug!("finished reading from {new_client_name} and sending to {stream_name}");
-                    break
+                if crate::read_from_then_write_to(
+                    &new_client_read_half,
+                    &stream_write_half,
+                    new_client_name,
+                    stream_name,
+                )
+                .await
+                .is_break()
+                {
+                    tracing::debug!(
+                        "finished reading from {new_client_name} and sending to {stream_name}"
+                    );
+                    break;
                 }
             }
         });
@@ -170,9 +195,19 @@ where
             tracing::trace!("stream->new client worker started");
 
             loop {
-                if crate::read_from_then_write_to(&stream_read_half, &new_client_write_half, stream_name, new_client_name).await.is_break() {
-                    tracing::debug!("finished reading from {stream_name} and sending to {new_client_name}");
-                    break
+                if crate::read_from_then_write_to(
+                    &stream_read_half,
+                    &new_client_write_half,
+                    stream_name,
+                    new_client_name,
+                )
+                .await
+                .is_break()
+                {
+                    tracing::debug!(
+                        "finished reading from {stream_name} and sending to {new_client_name}"
+                    );
+                    break;
                 }
             }
         });
