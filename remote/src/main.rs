@@ -12,8 +12,8 @@ use tokio::net::{TcpListener, UnixStream};
 use dip_common::DEFAULT_PORT;
 use dip_common::serve::ServeHooks;
 
-/// Remote program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
+#[command(author, version, about)]
 pub struct Config {
     /// The port to accept host connections to. If not specified, it will default to 49131.
     #[clap(short = 'P', long)]

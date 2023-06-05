@@ -13,8 +13,8 @@ use tokio::net::{TcpStream, UnixListener};
 use dip_common::DEFAULT_PORT;
 use dip_common::serve::ServeHooks;
 
-/// Host program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
+#[command(author, version, about)]
 pub struct Config {
     /// The location of the Discord IPC path. If not specified, it will be automatically detected.
     #[clap(short = 'p', long)]
