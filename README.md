@@ -59,3 +59,9 @@ Here are the locations of `host.toml` and `remote.toml` depending on operating s
                      `C:\Users\AWindowsPerson\AppData\Roaming\ALinuxPerson\DIP\config\remote.toml`
 
 Example configurations of `host.toml` and `remote.toml` can be found here: [host.toml](host/host.toml), [remote.toml](remote/remote.toml)
+
+# Usage
+
+## Host
+
+## Remote
