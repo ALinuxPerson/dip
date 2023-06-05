@@ -136,11 +136,11 @@ impl_Displayable!(SocketAddr);
 pub type OnStreamConnectFail = Box<dyn FnMut(&io::Error)>;
 
 #[derive(Default)]
-pub struct StreamHooks {
+pub struct ServeHooks {
     pub on_stream_connect_fail: Option<OnStreamConnectFail>,
 }
 
-impl StreamHooks {
+impl ServeHooks {
     pub fn on_stream_connect_fail(mut self, run: impl FnMut(&io::Error) + 'static) -> Self {
         self.on_stream_connect_fail = Some(Box::new(run));
         self
@@ -152,7 +152,7 @@ pub async fn serve<L, S, LS, SS>(
     stream_connect_to: SS,
     new_client_name: &'static str,
     stream_name: &'static str,
-    mut hooks: StreamHooks,
+    mut hooks: ServeHooks,
 ) -> anyhow::Result<()>
 where
     LS: Displayable + Send + 'static,
