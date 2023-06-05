@@ -2,6 +2,9 @@ pub mod dirs;
 pub mod serve;
 pub mod utils;
 
+#[cfg(windows)]
+mod win;
+
 use anyhow::Context;
 use async_trait::async_trait;
 pub use dirs::dirs;
