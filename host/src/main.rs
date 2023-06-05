@@ -20,7 +20,7 @@ pub struct Config {
     #[clap(short = 'p', long)]
     pub discord_ipc_path: Option<PathBuf>,
 
-    /// The remote address that the server will connect and forward packets to.
+    /// The remote address that the host will connect and forward packets to.
     #[clap(short, long)]
     pub remote_address: Option<MaybeSocketAddr>,
 }
