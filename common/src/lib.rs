@@ -18,6 +18,8 @@ use tokio::net::unix::{
     ReadHalf as UnixReadHalf, WriteHalf as UnixWriteHalf,
 };
 
+pub const DEFAULT_PORT: u16 = 49131;
+
 #[async_trait]
 pub trait ReadFrom: Sync {
     async fn readable(&self) -> io::Result<()>;

@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpStream, UnixListener};
+use dip_common::DEFAULT_PORT;
 
 /// Host program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
@@ -57,7 +58,7 @@ async fn try_main() -> anyhow::Result<()> {
                 dirs::host_toml().display()
             )
         })?
-        .with_port(49131);
+        .with_port(DEFAULT_PORT);
     tracing::info!(%remote_address, "remote address to connect to");
 
     tracing::info!("successfully resolved configuration");

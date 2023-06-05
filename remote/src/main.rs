@@ -9,6 +9,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpListener, UnixStream};
+use dip_common::DEFAULT_PORT;
 
 /// Remote program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
@@ -56,7 +57,7 @@ async fn try_main() -> anyhow::Result<()> {
         .context("no existing sockets are available (is discord open?)")?;
     tracing::info!("socket path is {}", socket_path.display());
 
-    let port = config.port.unwrap_or(49131);
+    let port = config.port.unwrap_or(DEFAULT_PORT);
     tracing::info!(?port, "port to listen on");
 
     tracing::info!("successfully resolved configuration");
