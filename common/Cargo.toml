@@ -3,6 +3,7 @@ name = "dip_common"
 version = "0.1.0"
 edition = "2021"
 description = "Common library for DIP used in host and remote"
+authors = ["ALinuxPerson <alinuxperson@gmail.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
