@@ -160,7 +160,7 @@ where
 
         tracing::debug!("creating new connection to {stream_name}");
         let error_message = format!("failed to connect to {}", stream_connect_to.display());
-        let mut stream = S::connect(stream_connect_to.clone())
+        let stream = S::connect(stream_connect_to.clone())
             .await
             .context(error_message)?;
 
