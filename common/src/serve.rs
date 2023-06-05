@@ -133,11 +133,26 @@ macro_rules! impl_Displayable {
 
 impl_Displayable!(SocketAddr);
 
+pub type OnStreamConnectFail = Box<dyn FnMut(&io::Error)>;
+
+#[derive(Default)]
+pub struct StreamHooks {
+    pub on_stream_connect_fail: Option<OnStreamConnectFail>,
+}
+
+impl StreamHooks {
+    pub fn on_stream_connect_fail(mut self, run: impl FnMut(&io::Error) + 'static) -> Self {
+        self.on_stream_connect_fail = Some(Box::new(run));
+        self
+    }
+}
+
 pub async fn serve<L, S, LS, SS>(
     listener_bind_to: LS,
     stream_connect_to: SS,
     new_client_name: &'static str,
     stream_name: &'static str,
+    mut hooks: StreamHooks,
 ) -> anyhow::Result<()>
 where
     LS: Displayable + Send + 'static,
@@ -160,9 +175,16 @@ where
 
         tracing::debug!("creating new connection to {stream_name}");
         let error_message = format!("failed to connect to {}", stream_connect_to.display());
-        let stream = S::connect(stream_connect_to.clone())
-            .await
-            .context(error_message)?;
+        let stream = match S::connect(stream_connect_to.clone()).await {
+            Ok(stream) => stream,
+            Err(error) => {
+                if let Some(mut hook) = hooks.on_stream_connect_fail.take() {
+                    hook(&error)
+                }
+
+                Err(error).context(error_message)?
+            }
+        };
 
         let (stream_read_half, stream_write_half) = stream.into_split();
 
