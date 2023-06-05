@@ -57,3 +57,5 @@ Here are the locations of `host.toml` and `remote.toml` depending on operating s
                      `C:\Users\AWindowsPerson\AppData\Roaming\ALinuxPerson\DIP\config\host.toml`
     * **remote.toml**: `{FOLDERID_RoamingAppData}\ALinuxPerson\DIP\config\remote.toml`, example is
                      `C:\Users\AWindowsPerson\AppData\Roaming\ALinuxPerson\DIP\config\remote.toml`
+
+Example configurations of `host.toml` and `remote.toml` can be found here: [host.toml](host/host.toml), [remote.toml](remote/remote.toml)
