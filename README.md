@@ -1,4 +1,11 @@
 # **D**iscord **I**PC **P**roxy
+
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+
 > Discord Rich Presence (and other features) without having Discord on!
 
 # Why?
@@ -119,3 +126,14 @@ and IPv6 if possible. Use the IPv4 address first, then use IPv6. See this sample
 # License
 
 Distributed under the MIT license. See [`LICENSE`](LICENSE) for more information.
+
+[contributors-shield]: https://img.shields.io/github/contributors/ALinuxPerson/dip.svg?style=for-the-badge
+[contributors-url]: https://github.com/ALinuxPerson/dip/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/ALinuxPerson/dip.svg?style=for-the-badge
+[forks-url]: https://github.com/ALinuxPerson/dip/network/members
+[stars-shield]: https://img.shields.io/github/stars/ALinuxPerson/dip.svg?style=for-the-badge
+[stars-url]: https://github.com/ALinuxPerson/dip/stargazers
+[issues-shield]: https://img.shields.io/github/issues/ALinuxPerson/dip.svg?style=for-the-badge
+[issues-url]: https://github.com/ALinuxPerson/dip/issues
+[license-shield]: https://img.shields.io/github/license/ALinuxPerson/dip.svg?style=for-the-badge
+[license-url]: https://github.com/ALinuxPerson/dip/blob/master/LICENSE.txt
