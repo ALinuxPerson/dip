@@ -49,6 +49,7 @@ use async_trait::async_trait;
 use std::fmt::{Debug, Display};
 use std::io;
 use std::net::SocketAddr;
+use std::ops::ControlFlow;
 use std::path::Display as DisplayablePath;
 use std::path::{Path, PathBuf};
 use tokio::net::{tcp, TcpListener, TcpStream, ToSocketAddrs};
@@ -170,24 +171,25 @@ where
     R: ReadFrom,
     W: WriteTo,
 {
-    tracing::trace!("{read_from_name}->{write_to_name} started");
+    tracing::trace!("{read_from_name}->{write_to_name} worker started");
 
     loop {
-        if crate::read_from_then_write_to(
+        match crate::read_from_then_write_to(
             read_from,
             write_to,
             read_from_name,
             write_to_name,
-        )
-            .await
-            .is_break()
-        {
-            tracing::debug!(
-                        "finished reading from {read_from_name} and sending to {write_to_name}"
-                    );
+        ).await {
+            ControlFlow::Continue(()) => continue,
+            ControlFlow::Break(result) => {
+                match result {
+                    Ok(()) => tracing::debug!("finished reading from {read_from_name} and sending to {write_to_name}"),
+                    Err(error) => tracing::error!("{error:#}"),
+                }
 
-            finished_receiver.send(()).await.unwrap();
-            break;
+                finished_receiver.send(()).await.unwrap();
+                break
+            }
         }
     }
 }
