@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpStream, UnixListener};
 use dip_common::DEFAULT_PORT;
+use dip_common::serve::ServeHooks;
 
 /// Host program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
@@ -73,6 +74,7 @@ async fn try_main() -> anyhow::Result<()> {
         remote_address,
         "unix socket",
         "remote client",
+        ServeHooks::default(),
     )
     .await
 }
