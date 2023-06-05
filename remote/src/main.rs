@@ -15,7 +15,7 @@ use dip_common::serve::ServeHooks;
 /// Remote program for DIP.
 #[derive(Serialize, Deserialize, Parser)]
 pub struct Config {
-    /// The port to accept incoming connections to.
+    /// The port to accept host connections to. If not specified, it will default to 49131.
     #[clap(short = 'P', long)]
     pub port: Option<u16>,
 
