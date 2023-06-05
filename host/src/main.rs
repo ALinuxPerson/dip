@@ -69,10 +69,16 @@ async fn try_main() -> anyhow::Result<()> {
 
     tokio::spawn(fut);
 
+    #[cfg(unix)]
+    let new_client_name = "unix socket";
+
+    #[cfg(windows)]
+    let new_client_name = "named pipe";
+
     dip_common::serve::<UnixListener, TcpStream, _, _>(
         socket_path,
         remote_address,
-        "unix socket",
+        new_client_name,
         "remote client",
         ServeHooks::default()
             .on_stream_connect_fail(|_| tracing::warn!("is the remote client currently on right now?")),
