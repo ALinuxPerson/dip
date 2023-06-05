@@ -157,6 +157,37 @@ impl ServeHooks {
     }
 }
 
+#[tracing::instrument(skip_all)]
+async fn read_then_send_worker<R, W>(
+    read_from: &R,
+    write_to: &W,
+    read_from_name: &str,
+    write_to_name: &str,
+)
+where
+    R: ReadFrom,
+    W: WriteTo,
+{
+    tracing::trace!("{read_from_name}->{write_to_name} started");
+
+    loop {
+        if crate::read_from_then_write_to(
+            read_from,
+            write_to,
+            read_from_name,
+            write_to_name,
+        )
+            .await
+            .is_break()
+        {
+            tracing::debug!(
+                        "finished reading from {read_from_name} and sending to {write_to_name}"
+                    );
+            break;
+        }
+    }
+}
+
 pub async fn serve<L, S, LS, SS>(
     listener_bind_to: LS,
     stream_connect_to: SS,
@@ -202,46 +233,22 @@ where
 
         // read from new client, then send to stream
         tokio::spawn(async move {
-            tracing::trace!("new client->stream worker started");
-
-            loop {
-                if crate::read_from_then_write_to(
-                    &new_client_read_half,
-                    &stream_write_half,
-                    new_client_name,
-                    stream_name,
-                )
-                .await
-                .is_break()
-                {
-                    tracing::debug!(
-                        "finished reading from {new_client_name} and sending to {stream_name}"
-                    );
-                    break;
-                }
-            }
+            read_then_send_worker(
+                &new_client_read_half,
+                &stream_write_half,
+                new_client_name,
+                stream_name,
+            ).await
         });
 
         // read from stream, then send to new client
         tokio::spawn(async move {
-            tracing::trace!("stream->new client worker started");
-
-            loop {
-                if crate::read_from_then_write_to(
-                    &stream_read_half,
-                    &new_client_write_half,
-                    stream_name,
-                    new_client_name,
-                )
-                .await
-                .is_break()
-                {
-                    tracing::debug!(
-                        "finished reading from {stream_name} and sending to {new_client_name}"
-                    );
-                    break;
-                }
-            }
+            read_then_send_worker(
+                &stream_read_half,
+                &new_client_write_half,
+                stream_name,
+                new_client_name,
+            ).await
         });
     }
 }
