@@ -11,5 +11,5 @@ async-trait = "0.1.68"
 directories = "5.0.1"
 fs-err = { version = "2.9.0", features = ["tokio"] }
 rand = "0.8.5"
-tokio = { version = "1.28.2", features = ["net", "rt", "macros", "signal", "sync"] }
+tokio = { version = "1.28.2", features = ["net", "rt", "macros", "signal", "sync", "time"] }
 tracing = "0.1.37"
