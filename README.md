@@ -65,3 +65,7 @@ Example configurations of `host.toml` and `remote.toml` can be found here: [host
 ## Host
 
 ## Remote
+
+# License
+
+Distributed under the MIT license. See [`LICENSE`](LICENSE) for more information.
