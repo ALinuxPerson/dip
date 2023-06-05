@@ -36,3 +36,24 @@ something akin to this project, but, alas, I've found none. Due to this, I decid
        $ dip_host --remote-address 192.168.86.31:20800
        ```
      * Through a configuration file. See the section below on how to configure the host and remote.
+3. You're all good to go!
+
+## Configuration
+
+Here are the locations of `host.toml` and `remote.toml` depending on operating system.
+
+* Linux
+  * **host.toml**: `$XDG_CONFIG_HOME/dip/host.toml` or `$HOME/.config/dip/host.toml`, example is 
+                     `/home/alp/.config/dip/host.toml`
+  * **remote.toml**: `$XDG_CONFIG_HOME/dip/remote.toml` or `$HOME/.config/dip/remote.toml`, example is
+                     `/home/alp/.config/dip/remote.toml`
+* Mac OS
+    * **host.toml**: `$HOME/Library/Application Support/ALinuxPerson.DIP/host.toml`, example is
+      `/Users/AMacPerson/Library/Application Support/ALinuxPerson.DIP/host.toml`
+    * **remote.toml**: `$HOME/Library/Application Support/ALinuxPerson.DIP/remote.toml`, example is
+      `/Users/AMacPerson/Library/Application Support/ALinuxPerson.DIP/remote.toml`
+* Windows
+    * **host.toml**: `{FOLDERID_RoamingAppData}\ALinuxPerson\DIP\config\host.toml`, example is
+                     `C:\Users\AWindowsPerson\AppData\Roaming\ALinuxPerson\DIP\config\host.toml`
+    * **remote.toml**: `{FOLDERID_RoamingAppData}\ALinuxPerson\DIP\config\remote.toml`, example is
+                     `C:\Users\AWindowsPerson\AppData\Roaming\ALinuxPerson\DIP\config\remote.toml`
