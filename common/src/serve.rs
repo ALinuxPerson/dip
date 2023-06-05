@@ -1,3 +1,48 @@
+#[cfg(unix)]
+mod unix {
+    use std::io;
+    use std::path::Path;
+    use async_trait::async_trait;
+    use tokio::net::{unix, UnixListener, UnixStream};
+    use tokio::net::unix::SocketAddr;
+    use unix::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf};
+    use crate::serve::{ServableListener, ServableStream};
+
+    #[async_trait]
+    impl<S: AsRef<Path> + Send + 'static> ServableListener<S> for UnixListener {
+        type Stream = UnixStream;
+        type SocketAddr = SocketAddr;
+
+        async fn bind(socket: S) -> io::Result<Self> {
+            UnixListener::bind(socket)
+        }
+
+        async fn accept(&self) -> io::Result<(Self::Stream, Self::SocketAddr)> {
+            UnixListener::accept(self).await
+        }
+    }
+
+    #[async_trait]
+    impl<S: AsRef<Path> + Send + 'static> ServableStream<S> for UnixStream {
+        type OwnedReadHalf = OwnedReadHalf;
+        type OwnedWriteHalf = OwnedWriteHalf;
+        type ReadHalf<'a> = ReadHalf<'a> where Self: 'a;
+        type WriteHalf<'a> = WriteHalf<'a> where Self: 'a;
+
+        async fn connect(socket: S) -> io::Result<Self> {
+            UnixStream::connect(socket).await
+        }
+
+        fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf) {
+            UnixStream::into_split(self)
+        }
+
+        fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>) {
+            UnixStream::split(self)
+        }
+    }
+}
+
 use crate::{ReadFrom, WriteTo};
 use anyhow::Context;
 use async_trait::async_trait;
@@ -6,8 +51,7 @@ use std::io;
 use std::net::SocketAddr;
 use std::path::Display as DisplayablePath;
 use std::path::{Path, PathBuf};
-use tokio::net::unix::SocketAddr as UnixSocketAddr;
-use tokio::net::{tcp, unix, TcpListener, TcpStream, ToSocketAddrs, UnixListener, UnixStream};
+use tokio::net::{tcp, TcpListener, TcpStream, ToSocketAddrs};
 
 #[async_trait]
 pub trait ServableListener<S: Send + 'static>: Sized {
@@ -16,20 +60,6 @@ pub trait ServableListener<S: Send + 'static>: Sized {
 
     async fn bind(socket: S) -> io::Result<Self>;
     async fn accept(&self) -> io::Result<(Self::Stream, Self::SocketAddr)>;
-}
-
-#[async_trait]
-impl<S: AsRef<Path> + Send + 'static> ServableListener<S> for UnixListener {
-    type Stream = UnixStream;
-    type SocketAddr = UnixSocketAddr;
-
-    async fn bind(socket: S) -> io::Result<Self> {
-        UnixListener::bind(socket)
-    }
-
-    async fn accept(&self) -> io::Result<(Self::Stream, Self::SocketAddr)> {
-        UnixListener::accept(self).await
-    }
 }
 
 #[async_trait]
@@ -60,26 +90,6 @@ pub trait ServableStream<S: Send + 'static>: Sized {
     async fn connect(socket: S) -> io::Result<Self>;
     fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf);
     fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>);
-}
-
-#[async_trait]
-impl<S: AsRef<Path> + Send + 'static> ServableStream<S> for UnixStream {
-    type OwnedReadHalf = unix::OwnedReadHalf;
-    type OwnedWriteHalf = unix::OwnedWriteHalf;
-    type ReadHalf<'a> = unix::ReadHalf<'a> where Self: 'a;
-    type WriteHalf<'a> = unix::WriteHalf<'a> where Self: 'a;
-
-    async fn connect(socket: S) -> io::Result<Self> {
-        UnixStream::connect(socket).await
-    }
-
-    fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf) {
-        UnixStream::into_split(self)
-    }
-
-    fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>) {
-        UnixStream::split(self)
-    }
 }
 
 #[async_trait]
