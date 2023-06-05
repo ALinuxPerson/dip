@@ -1,18 +1,3 @@
-#[macro_use]
-mod macros {
-    macro_rules! read_exact_or_break {
-        ($var:expr, $buf:expr, $error_message:expr) => {
-            match $var.read_exact_or_break($buf).await {
-                ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
-                ControlFlow::Continue(Ok(())) => (),
-                ControlFlow::Continue(Err(error)) => {
-                    return ControlFlow::Break(Err(error).context($error_message))
-                }
-            }
-        };
-    }
-}
-
 pub mod dirs;
 pub mod serve;
 pub mod utils {
@@ -229,6 +214,18 @@ pub async fn read_from_then_write_to<R: ReadFrom, W: WriteTo>(
     read_from_name: &str,
     write_to_name: &str,
 ) -> ControlFlow<anyhow::Result<()>> {
+    macro_rules! read_exact_or_break {
+        ($var:expr, $buf:expr, $error_message:expr) => {
+            match $var.read_exact_or_break($buf).await {
+                ControlFlow::Break(()) => return ControlFlow::Break(Ok(())),
+                ControlFlow::Continue(Ok(())) => (),
+                ControlFlow::Continue(Err(error)) => {
+                    return ControlFlow::Break(Err(error).context($error_message))
+                }
+            }
+        };
+    }
+
     let mut header_buffer = [0; 8];
     read_exact_or_break!(
         read_from,
