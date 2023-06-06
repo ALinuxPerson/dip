@@ -63,7 +63,8 @@ host and remote binary:
 2023-06-06T09:02:09.086682Z DEBUG dip_common::serve: start serving connections
 ```
 
-Here are the locations of `host.toml` and `remote.toml` depending on operating system.
+Here are the locations of `host.toml` and `remote.toml` depending on operating system. **Note that Windows is not 
+supported yet (although it is being worked on), and macOS is untested.**
 
 * Linux
   * **host.toml**: `$XDG_CONFIG_HOME/dip/host.toml` or `$HOME/.config/dip/host.toml`, example is 
