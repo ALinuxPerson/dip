@@ -6,6 +6,7 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::OnceLock;
 use tokio::net::{TcpStream, UnixListener};
 use dip_common::config::ConfigLike;
 use dip_common::DEFAULT_PORT;
@@ -21,6 +22,11 @@ pub struct Config {
     /// The remote address that the host will connect and forward packets to.
     #[clap(short, long)]
     pub remote_address: Option<MaybeSocketAddr>,
+
+    /// Whether or not to keep the unix socket created by this program on exit.
+    #[clap(short, long)]
+    #[serde(default)]
+    pub keep_socket: bool,
 }
 
 impl<'de> ConfigLike<'de> for Config {
@@ -59,9 +65,20 @@ async fn try_main() -> anyhow::Result<()> {
     tracing::info!("successfully resolved configuration");
     drop(span);
 
-    let (_destroy_on_drop, fut) = utils::destroy_path_on_termination(socket_path.clone())?;
+    let destroy_socket_on_drop = OnceLock::new();
 
-    tokio::spawn(fut);
+    if !config.keep_socket {
+        let (destroy_on_drop, fut) = utils::destroy_path_on_termination(socket_path.clone())?;
+
+        // we need to do this because we need `destroy_on_drop` to stay alive until the end of the
+        // main function, otherwise it'll get dropped by the end of this scope and then the unix
+        // socket gets deleted immediately, which is bad if we want external programs to interact
+        // with our unix socket, cuz, y'know, it doesn't exist.
+        destroy_socket_on_drop.set(destroy_on_drop)
+            .unwrap_or_else(|_| panic!("`destroy_socket_on_drop` already set"));
+
+        tokio::spawn(fut);
+    }
 
     #[cfg(unix)]
     let new_client_name = "unix socket";
