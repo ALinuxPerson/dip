@@ -5,6 +5,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
+[![Made with Rust][rust-shield]][rust-url]
 
 > Discord Rich Presence (and other features) without having Discord on!
 
@@ -158,3 +159,5 @@ Distributed under the MIT license. See [`LICENSE`](LICENSE) for more information
 [license-shield]: https://img.shields.io/github/license/ALinuxPerson/dip.svg?style=for-the-badge
 [license-url]: https://github.com/ALinuxPerson/dip/blob/master/LICENSE.txt
 [tracing-subscriber-docs-url]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
+[rust-shield]: https://img.shields.io/badge/made%20with%20rust-e43d3f?style=for-the-badge&logo=rust&logoColor=white
+[rust-url]: https://www.rust-lang.org
