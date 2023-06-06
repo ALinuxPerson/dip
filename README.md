@@ -9,6 +9,25 @@
 
 > Discord Rich Presence (and other features) without having Discord on!
 
+# Table of Contents
+
+- [Why?](#why)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Instructions](#instructions)
+- [Configuration](#configuration)
+- [OS Support](#os-support)
+- [Usage](#usage)
+  - [Host](#host)
+  - [Remote](#remote)
+- [Advanced Usage](#advanced-usage)
+  - [Logging](#logging)
+- [Compilation](#compilation)
+  - [Prerequisites](#prerequisites-1)
+  - [Instructions](#instructions-1)
+- [Terminologies](#terminologies)
+- [License](#license)
+
 # Why?
 
 I occasionally run memory intensive applications on my computer. Unfortunately, I often can't run Discord simultaneously
