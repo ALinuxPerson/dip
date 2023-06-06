@@ -1,4 +1,3 @@
-use anyhow::Context;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
