@@ -50,6 +50,18 @@ something akin to this project, but, alas, I've found none. Due to this, I decid
 
 The configuration resolves in the following order: arguments passed, configuration files.
 
+The location of the configuration file is told when the `RUST_LOG` environment variable is set to `DEBUG` on both the 
+host and remote binary:
+
+```
+2023-06-06T09:02:09.085950Z DEBUG dip_common: config file location is /home/alp/.config/dip/host.toml // <-- config file location
+2023-06-06T09:02:09.086546Z  INFO dip_host: socket path is /run/user/1000/discord-ipc-0
+2023-06-06T09:02:09.086563Z  INFO dip_host: remote address to connect to remote_address=192.168.86.32:49131
+2023-06-06T09:02:09.086577Z  INFO dip_host: successfully resolved configuration
+2023-06-06T09:02:09.086661Z DEBUG dip_host::utils: destroy path /run/user/1000/discord-ipc-0 on termination
+2023-06-06T09:02:09.086682Z DEBUG dip_common::serve: start serving connections
+```
+
 Here are the locations of `host.toml` and `remote.toml` depending on operating system.
 
 * Linux
