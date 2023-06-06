@@ -1,15 +1,13 @@
-mod dirs;
 mod utils;
 
 use crate::utils::MaybeSocketAddr;
 use anyhow::Context;
 use clap::Parser;
-use figment::providers::{Format, Serialized, Toml};
-use figment::Figment;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpStream, UnixListener};
+use dip_common::config::ConfigLike;
 use dip_common::DEFAULT_PORT;
 use dip_common::serve::ServeHooks;
 
@@ -25,14 +23,8 @@ pub struct Config {
     pub remote_address: Option<MaybeSocketAddr>,
 }
 
-impl Config {
-    pub fn read() -> anyhow::Result<Self> {
-        Figment::new()
-            .merge(Serialized::defaults(Self::parse()))
-            .merge(Toml::file(dirs::host_toml()))
-            .extract()
-            .context("failed to extract config")
-    }
+impl<'de> ConfigLike<'de> for Config {
+    const FILE_NAME: &'static str = "host.toml";
 }
 
 pub fn find_available_socket() -> Option<PathBuf> {
@@ -56,7 +48,7 @@ async fn try_main() -> anyhow::Result<()> {
         .with_context(|| {
             format!(
                 "the remote address must be passed in either the arguments or the config ('{}')",
-                dirs::host_toml().display()
+                Config::toml().display()
             )
         })?
         .with_port(DEFAULT_PORT);

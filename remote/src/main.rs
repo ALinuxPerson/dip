@@ -1,14 +1,11 @@
-mod dirs;
-
 use anyhow::Context;
 use clap::Parser;
-use figment::providers::{Format, Serialized, Toml};
-use figment::Figment;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpListener, UnixStream};
+use dip_common::config::ConfigLike;
 use dip_common::DEFAULT_PORT;
 use dip_common::serve::ServeHooks;
 
@@ -24,14 +21,8 @@ pub struct Config {
     pub discord_ipc_path: Option<PathBuf>,
 }
 
-impl Config {
-    pub fn read() -> anyhow::Result<Self> {
-        Figment::new()
-            .merge(Serialized::defaults(Self::parse()))
-            .merge(Toml::file(dirs::remote_toml()))
-            .extract()
-            .context("failed to extract config")
-    }
+impl<'de> ConfigLike<'de> for Config {
+    const FILE_NAME: &'static str = "remote.toml";
 }
 
 pub fn find_existing_socket() -> Option<PathBuf> {

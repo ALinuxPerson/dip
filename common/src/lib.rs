@@ -4,6 +4,33 @@ mod macros;
 pub mod dirs;
 pub mod serve;
 pub mod utils;
+pub mod config {
+    use std::path::{Path, PathBuf};
+    use std::sync::OnceLock;
+    use anyhow::Context;
+    use clap::Parser;
+    use figment::Figment;
+    use figment::providers::{Format, Serialized, Toml};
+    use serde::{Deserialize, Serialize};
+
+    pub trait ConfigLike<'de>: Serialize + Deserialize<'de> + Parser + Sized {
+        const FILE_NAME: &'static str;
+
+        fn read() -> anyhow::Result<Self> {
+            Figment::new()
+                .merge(Serialized::defaults(Self::parse()))
+                .merge(Toml::file(Self::toml()))
+                .extract()
+                .context("failed to extract config")
+        }
+
+        fn toml() -> &'static Path {
+            static PATH: OnceLock<PathBuf> = OnceLock::new();
+
+            PATH.get_or_init(|| crate::dirs().config_dir().join(Self::FILE_NAME))
+        }
+    }
+}
 
 #[cfg(windows)]
 mod win;
