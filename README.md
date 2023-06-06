@@ -83,7 +83,8 @@ host and remote binary:
 ```
 
 Here are the locations of `host.toml` and `remote.toml` depending on operating system. **Note that Windows is not 
-supported yet (although it is being worked on), and macOS is untested.**
+supported yet (although it is being worked on), and macOS is untested.** See [OS Support](#os-support) section for more 
+details.
 
 * Linux
   * **host.toml**: `$XDG_CONFIG_HOME/dip/host.toml` or `$HOME/.config/dip/host.toml`, example is 
