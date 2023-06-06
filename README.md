@@ -116,6 +116,14 @@ and IPv6 if possible. Use the IPv4 address first, then use IPv6. See this sample
 2023-06-05T13:32:21.774744Z  INFO dip_remote: remote ipv6 address is [::ffff:192.168.86.32]:49131 // <- addresses
 ```
 
+# Advanced Usage
+
+## Logging
+
+Both the host and remote binary use `tracing_subscriber`'s environment filter, which utilizes the `RUST_LOG` 
+environment variable to base what to log on. Basic values which can be used are `TRACE`, `DEBUG`, `INFO`, `WARN`, and 
+`ERROR`. For more information on the syntax, see the [`tracing-subscriber` documentation][tracing-subscriber-docs-url].
+
 # Terminologies
 
 **Host**: The computer which will receive all requests from the virtual socket and forward them to the remote through TCP. 
@@ -149,3 +157,4 @@ Distributed under the MIT license. See [`LICENSE`](LICENSE) for more information
 [issues-url]: https://github.com/ALinuxPerson/dip/issues
 [license-shield]: https://img.shields.io/github/license/ALinuxPerson/dip.svg?style=for-the-badge
 [license-url]: https://github.com/ALinuxPerson/dip/blob/master/LICENSE.txt
+[tracing-subscriber-docs-url]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
