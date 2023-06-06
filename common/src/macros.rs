@@ -55,4 +55,3 @@ macro_rules! impl_WriteTo_for {
         }
     };
 }
-

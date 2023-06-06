@@ -1,12 +1,12 @@
 use clap::Parser;
+use dip_common::config::ConfigLike;
+use dip_common::serve::ServeHooks;
+use dip_common::DEFAULT_PORT;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::net::{TcpListener, UnixStream};
-use dip_common::config::ConfigLike;
-use dip_common::DEFAULT_PORT;
-use dip_common::serve::ServeHooks;
 
 #[derive(Serialize, Deserialize, Parser)]
 #[command(author, version, about)]
@@ -32,7 +32,11 @@ pub fn find_existing_socket() -> Option<PathBuf> {
     dip_common::find_socket(|socket_path| socket_path.exists())
 }
 
-fn fetch_local_ip(fetch_fn: impl FnOnce() -> Result<IpAddr, local_ip_address::Error>, port: u16, ip_type: &str) {
+fn fetch_local_ip(
+    fetch_fn: impl FnOnce() -> Result<IpAddr, local_ip_address::Error>,
+    port: u16,
+    ip_type: &str,
+) {
     match fetch_fn() {
         Ok(ip_address) => tracing::info!("remote {ip_type} address is {ip_address}:{port}"),
         Err(error) => tracing::warn!("failed to retrieve local {ip_type} address: {error}"),
@@ -41,7 +45,10 @@ fn fetch_local_ip(fetch_fn: impl FnOnce() -> Result<IpAddr, local_ip_address::Er
 
 async fn try_main() -> anyhow::Result<()> {
     let (span, config) = dip_common::common::<Config>()?;
-    let socket_path = config.socket_path(find_existing_socket, "no existing sockets are available (is discord open?)")?;
+    let socket_path = config.socket_path(
+        find_existing_socket,
+        "no existing sockets are available (is discord open?)",
+    )?;
     tracing::info!("socket path is {}", socket_path.display());
 
     let port = config.port.unwrap_or(DEFAULT_PORT);
@@ -60,7 +67,8 @@ async fn try_main() -> anyhow::Result<()> {
         "discord ipc",
         ServeHooks::default()
             .on_stream_connect_fail(|_| tracing::warn!("was discord open then closed?")),
-    ).await
+    )
+    .await
 }
 
 #[tokio::main]

@@ -3,14 +3,14 @@ mod utils;
 use crate::utils::MaybeSocketAddr;
 use anyhow::Context;
 use clap::Parser;
+use dip_common::config::ConfigLike;
+use dip_common::serve::ServeHooks;
+use dip_common::DEFAULT_PORT;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::OnceLock;
 use tokio::net::{TcpStream, UnixListener};
-use dip_common::config::ConfigLike;
-use dip_common::DEFAULT_PORT;
-use dip_common::serve::ServeHooks;
 
 #[derive(Serialize, Deserialize, Parser)]
 #[command(author, version, about)]
@@ -43,7 +43,10 @@ pub fn find_available_socket() -> Option<PathBuf> {
 
 async fn try_main() -> anyhow::Result<()> {
     let (span, config) = dip_common::common::<Config>()?;
-    let socket_path = config.socket_path(find_available_socket, "no more sockets available (too many discord clients open?)")?;
+    let socket_path = config.socket_path(
+        find_available_socket,
+        "no more sockets available (too many discord clients open?)",
+    )?;
     tracing::info!("socket path is {}", socket_path.display());
 
     let remote_address = config
@@ -69,7 +72,8 @@ async fn try_main() -> anyhow::Result<()> {
         // main function, otherwise it'll get dropped by the end of this scope and then the unix
         // socket gets deleted immediately, which is bad if we want external programs to interact
         // with our unix socket, cuz, y'know, it doesn't exist.
-        destroy_socket_on_drop.set(destroy_on_drop)
+        destroy_socket_on_drop
+            .set(destroy_on_drop)
             .unwrap_or_else(|_| panic!("`destroy_socket_on_drop` already set"));
 
         tokio::spawn(fut);
@@ -86,8 +90,9 @@ async fn try_main() -> anyhow::Result<()> {
         remote_address,
         new_client_name,
         "remote client",
-        ServeHooks::default()
-            .on_stream_connect_fail(|_| tracing::warn!("is the remote client currently on right now?")),
+        ServeHooks::default().on_stream_connect_fail(|_| {
+            tracing::warn!("is the remote client currently on right now?")
+        }),
     )
     .await
 }

@@ -1,12 +1,12 @@
 #[cfg(unix)]
 mod unix {
+    use crate::serve::{ServableListener, ServableStream};
+    use async_trait::async_trait;
     use std::io;
     use std::path::Path;
-    use async_trait::async_trait;
-    use tokio::net::{unix, UnixListener, UnixStream};
     use tokio::net::unix::SocketAddr;
+    use tokio::net::{unix, UnixListener, UnixStream};
     use unix::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf};
-    use crate::serve::{ServableListener, ServableStream};
 
     #[async_trait]
     impl<S: AsRef<Path> + Send + 'static> ServableListener<S> for UnixListener {
@@ -166,29 +166,27 @@ async fn read_then_send_worker<R, W>(
     read_from_name: &str,
     write_to_name: &str,
     finished_receiver: mpsc::Sender<()>,
-)
-where
+) where
     R: ReadFrom,
     W: WriteTo,
 {
     tracing::trace!("{read_from_name}->{write_to_name} worker started");
 
     loop {
-        match crate::read_from_then_write_to(
-            read_from,
-            write_to,
-            read_from_name,
-            write_to_name,
-        ).await {
+        match crate::read_from_then_write_to(read_from, write_to, read_from_name, write_to_name)
+            .await
+        {
             ControlFlow::Continue(()) => continue,
             ControlFlow::Break(result) => {
                 match result {
-                    Ok(()) => tracing::debug!("finished reading from {read_from_name} and sending to {write_to_name}"),
+                    Ok(()) => tracing::debug!(
+                        "finished reading from {read_from_name} and sending to {write_to_name}"
+                    ),
                     Err(error) => tracing::error!("{error:#}"),
                 }
 
                 finished_receiver.send(()).await.unwrap();
-                break
+                break;
             }
         }
     }
@@ -247,7 +245,8 @@ where
                 new_client_name,
                 stream_name,
                 nc2s_finished_sender,
-            ).await
+            )
+            .await
         });
 
         // read from stream, then send to new client
@@ -258,7 +257,8 @@ where
                 stream_name,
                 new_client_name,
                 s2nc_finished_sender,
-            ).await
+            )
+            .await
         });
 
         tokio::spawn(async move {
@@ -273,7 +273,7 @@ where
 
                 if nc2s_finished && s2nc_finished {
                     tracing::info!("connection to {stream_name} closed");
-                    break
+                    break;
                 }
             }
         });

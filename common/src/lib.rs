@@ -5,14 +5,14 @@ pub mod dirs;
 pub mod serve;
 pub mod utils;
 pub mod config {
+    use anyhow::Context;
+    use clap::Parser;
+    use figment::providers::{Format, Serialized, Toml};
+    use figment::Figment;
+    use serde::{Deserialize, Serialize};
     use std::borrow::Cow;
     use std::path::{Path, PathBuf};
     use std::sync::OnceLock;
-    use anyhow::Context;
-    use clap::Parser;
-    use figment::Figment;
-    use figment::providers::{Format, Serialized, Toml};
-    use serde::{Deserialize, Serialize};
 
     pub trait ConfigLike<'de>: Serialize + Deserialize<'de> + Parser + Sized {
         const FILE_NAME: &'static str;
@@ -33,12 +33,16 @@ pub mod config {
             PATH.get_or_init(|| crate::dirs().config_dir().join(Self::FILE_NAME))
         }
 
-        fn socket_path(&self, find_socket_fn: impl FnOnce() -> Option<PathBuf>, on_error: &'static str) -> anyhow::Result<Cow<Path>> {
+        fn socket_path(
+            &self,
+            find_socket_fn: impl FnOnce() -> Option<PathBuf>,
+            on_error: &'static str,
+        ) -> anyhow::Result<Cow<Path>> {
             self.discord_ipc_path()
                 .as_deref()
                 .map(Cow::Borrowed)
-                .or_else(|| Some(Cow::Owned(find_socket_fn()?))
-                ).context(on_error)
+                .or_else(|| Some(Cow::Owned(find_socket_fn()?)))
+                .context(on_error)
         }
     }
 }
@@ -59,6 +63,7 @@ mod unix {
 
 use anyhow::Context;
 use async_trait::async_trait;
+pub use config::ConfigLike;
 pub use dirs::dirs;
 pub use serve::serve;
 use std::ops::ControlFlow;
@@ -66,7 +71,6 @@ use std::path::{Path, PathBuf};
 use std::{env, io};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf};
 use tracing::Span;
-pub use config::ConfigLike;
 
 pub const DEFAULT_PORT: u16 = 49131;
 

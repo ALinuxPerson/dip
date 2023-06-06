@@ -1,13 +1,15 @@
+use crate::serve::{ServableListener, ServableStream};
+use crate::{ReadFrom, WriteTo};
+use async_trait::async_trait;
 use std::ffi::{OsStr, OsString};
 use std::io;
 use std::sync::Arc;
 use std::time::Duration;
-use async_trait::async_trait;
-use tokio::net::windows::named_pipe::{ClientOptions, NamedPipeClient, NamedPipeServer, ServerOptions};
+use tokio::net::windows::named_pipe::{
+    ClientOptions, NamedPipeClient, NamedPipeServer, ServerOptions,
+};
 use tokio::sync::RwLock;
 use tokio::time;
-use crate::{ReadFrom, WriteTo};
-use crate::serve::{ServableListener, ServableStream};
 
 pub struct ServableNamedPipeServer {
     inner: RwLock<Option<NamedPipeServer>>,
@@ -21,7 +23,9 @@ impl<S: Into<OsString> + Send + 'static> ServableListener<S> for ServableNamedPi
 
     async fn bind(socket: S) -> io::Result<Self> {
         let address = socket.into();
-        let this = ServerOptions::new().first_pipe_instance(true).create(address.clone())?;
+        let this = ServerOptions::new()
+            .first_pipe_instance(true)
+            .create(address.clone())?;
         Ok(Self {
             inner: RwLock::new(Some(this)),
             address,
@@ -51,11 +55,17 @@ impl<S: Send + 'static> ServableStream<S> for NamedPipeServer {
     fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf) {
         let this = Arc::new(self);
 
-        (NamedPipeServerOwnedReadHalf(Arc::clone(&this)), NamedPipeServerOwnedWriteHalf(this))
+        (
+            NamedPipeServerOwnedReadHalf(Arc::clone(&this)),
+            NamedPipeServerOwnedWriteHalf(this),
+        )
     }
 
     fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>) {
-        (NamedPipeServerReadHalf(self), NamedPipeServerWriteHalf(self))
+        (
+            NamedPipeServerReadHalf(self),
+            NamedPipeServerWriteHalf(self),
+        )
     }
 }
 
@@ -118,7 +128,9 @@ impl<S: AsRef<OsStr> + Send + 'static> ServableStream<S> for NamedPipeClient {
         loop {
             match ClientOptions::new().open(address) {
                 Ok(client) => break Ok(client),
-                Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY) => time::sleep(Duration::from_millis(50)).await,
+                Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY) => {
+                    time::sleep(Duration::from_millis(50)).await
+                }
                 Err(e) => return Err(e),
             }
         }
@@ -127,11 +139,17 @@ impl<S: AsRef<OsStr> + Send + 'static> ServableStream<S> for NamedPipeClient {
     fn into_split(self) -> (Self::OwnedReadHalf, Self::OwnedWriteHalf) {
         let this = Arc::new(self);
 
-        (NamedPipeClientOwnedReadHalf(Arc::clone(&this)), NamedPipeClientOwnedWriteHalf(this))
+        (
+            NamedPipeClientOwnedReadHalf(Arc::clone(&this)),
+            NamedPipeClientOwnedWriteHalf(this),
+        )
     }
 
     fn split(&mut self) -> (Self::ReadHalf<'_>, Self::WriteHalf<'_>) {
-        (NamedPipeClientReadHalf(self), NamedPipeClientWriteHalf(self))
+        (
+            NamedPipeClientReadHalf(self),
+            NamedPipeClientWriteHalf(self),
+        )
     }
 }
 
