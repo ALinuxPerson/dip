@@ -71,7 +71,7 @@ supported yet (although it is being worked on), and macOS is untested.**
                      `/home/alp/.config/dip/host.toml`
   * **remote.toml**: `$XDG_CONFIG_HOME/dip/remote.toml` or `$HOME/.config/dip/remote.toml`, example is
                      `/home/alp/.config/dip/remote.toml`
-* Mac OS
+* macOS
     * **host.toml**: `$HOME/Library/Application Support/ALinuxPerson.DIP/host.toml`, example is
       `/Users/AMacPerson/Library/Application Support/ALinuxPerson.DIP/host.toml`
     * **remote.toml**: `$HOME/Library/Application Support/ALinuxPerson.DIP/remote.toml`, example is
