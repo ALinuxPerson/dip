@@ -54,6 +54,8 @@ use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::{env, io};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf};
+use tracing::Span;
+pub use config::ConfigLike;
 
 pub const DEFAULT_PORT: u16 = 49131;
 
@@ -221,4 +223,16 @@ pub async fn read_from_then_write_to<R: ReadFrom, W: WriteTo>(
             ControlFlow::Break(Err(error).context("failed to write packet"))
         }
     }
+}
+
+pub fn common<'de, C: ConfigLike<'de>>() -> anyhow::Result<(Span, C)> {
+    tracing_subscriber::fmt::init();
+    dirs::initialize()?;
+
+    tracing::debug!("config file location is {}", C::toml().display());
+
+    let span = tracing::info_span!("resolve config");
+    let config = C::read()?;
+
+    Ok((span, config))
 }

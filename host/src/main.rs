@@ -38,13 +38,7 @@ pub fn find_available_socket() -> Option<PathBuf> {
 }
 
 async fn try_main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
-    dip_common::dirs::initialize()?;
-
-    tracing::debug!("config file location is {}", Config::toml().display());
-
-    let span = tracing::info_span!("resolve config");
-    let config = Config::read()?;
+    let (span, config) = dip_common::common::<Config>()?;
     let socket_path = config
         .discord_ipc_path
         .or_else(find_available_socket)
