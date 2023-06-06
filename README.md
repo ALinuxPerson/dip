@@ -146,6 +146,41 @@ Both the host and remote binary use `tracing_subscriber`'s environment filter, w
 environment variable to base what to log on. Basic values which can be used are `TRACE`, `DEBUG`, `INFO`, `WARN`, and 
 `ERROR`. For more information on the syntax, see the [`tracing-subscriber` documentation][tracing-subscriber-docs-url].
 
+# Compilation
+
+## Prerequisites
+
+* Rust >=1.70
+* Git
+
+## Instructions
+
+1. Clone this repository.
+
+    ```bash
+    $ git clone https://github.com/ALinuxPerson/dip.git
+    ```
+
+2. Enter the project directory.
+
+    ```bash
+    $ cd dip
+    ```
+
+3. Build the project.
+
+    ```bash
+   $ cargo build --release
+    ```
+
+4. Enter the `target/release` directory. The built binaries are named `dip_host` and `dip_remote`.
+
+    ```bash
+   $ cd target/release
+   $ ls
+   [...] dip_host [...] dip_remote [...]
+    ```
+
 # Terminologies
 
 **Host**: The computer which will receive all requests from the virtual socket and forward them to the remote through TCP. 
