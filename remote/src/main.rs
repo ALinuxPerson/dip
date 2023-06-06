@@ -23,6 +23,10 @@ pub struct Config {
 
 impl<'de> ConfigLike<'de> for Config {
     const FILE_NAME: &'static str = "remote.toml";
+
+    fn discord_ipc_path(&self) -> &Option<PathBuf> {
+        &self.discord_ipc_path
+    }
 }
 
 pub fn find_existing_socket() -> Option<PathBuf> {
@@ -38,10 +42,7 @@ fn fetch_local_ip(fetch_fn: impl FnOnce() -> Result<IpAddr, local_ip_address::Er
 
 async fn try_main() -> anyhow::Result<()> {
     let (span, config) = dip_common::common::<Config>()?;
-    let socket_path = config
-        .discord_ipc_path
-        .or_else(find_existing_socket)
-        .context("no existing sockets are available (is discord open?)")?;
+    let socket_path = config.socket_path(find_existing_socket, "no existing sockets are available (is discord open?)")?;
     tracing::info!("socket path is {}", socket_path.display());
 
     let port = config.port.unwrap_or(DEFAULT_PORT);
@@ -55,7 +56,7 @@ async fn try_main() -> anyhow::Result<()> {
 
     dip_common::serve::<TcpListener, UnixStream, _, _>(
         SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port),
-        socket_path,
+        socket_path.to_path_buf(),
         "host server",
         "discord ipc",
         ServeHooks::default()

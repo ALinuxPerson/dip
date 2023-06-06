@@ -31,6 +31,10 @@ pub struct Config {
 
 impl<'de> ConfigLike<'de> for Config {
     const FILE_NAME: &'static str = "host.toml";
+
+    fn discord_ipc_path(&self) -> &Option<PathBuf> {
+        &self.discord_ipc_path
+    }
 }
 
 pub fn find_available_socket() -> Option<PathBuf> {
@@ -39,10 +43,7 @@ pub fn find_available_socket() -> Option<PathBuf> {
 
 async fn try_main() -> anyhow::Result<()> {
     let (span, config) = dip_common::common::<Config>()?;
-    let socket_path = config
-        .discord_ipc_path
-        .or_else(find_available_socket)
-        .context("no more available sockets available (too many discord clients open?)")?;
+    let socket_path = config.socket_path(find_available_socket, "no more sockets available (too many discord clients open?)")?;
     tracing::info!("socket path is {}", socket_path.display());
 
     let remote_address = config
@@ -62,7 +63,7 @@ async fn try_main() -> anyhow::Result<()> {
     let destroy_socket_on_drop = OnceLock::new();
 
     if !config.keep_socket {
-        let (destroy_on_drop, fut) = utils::destroy_path_on_termination(socket_path.clone())?;
+        let (destroy_on_drop, fut) = utils::destroy_path_on_termination(socket_path.to_path_buf())?;
 
         // we need to do this because we need `destroy_on_drop` to stay alive until the end of the
         // main function, otherwise it'll get dropped by the end of this scope and then the unix
@@ -81,7 +82,7 @@ async fn try_main() -> anyhow::Result<()> {
     let new_client_name = "named pipe";
 
     dip_common::serve::<UnixListener, TcpStream, _, _>(
-        socket_path,
+        socket_path.to_path_buf(),
         remote_address,
         new_client_name,
         "remote client",

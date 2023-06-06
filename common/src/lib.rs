@@ -5,6 +5,7 @@ pub mod dirs;
 pub mod serve;
 pub mod utils;
 pub mod config {
+    use std::borrow::Cow;
     use std::path::{Path, PathBuf};
     use std::sync::OnceLock;
     use anyhow::Context;
@@ -15,6 +16,8 @@ pub mod config {
 
     pub trait ConfigLike<'de>: Serialize + Deserialize<'de> + Parser + Sized {
         const FILE_NAME: &'static str;
+
+        fn discord_ipc_path(&self) -> &Option<PathBuf>;
 
         fn read() -> anyhow::Result<Self> {
             Figment::new()
@@ -28,6 +31,14 @@ pub mod config {
             static PATH: OnceLock<PathBuf> = OnceLock::new();
 
             PATH.get_or_init(|| crate::dirs().config_dir().join(Self::FILE_NAME))
+        }
+
+        fn socket_path(&self, find_socket_fn: impl FnOnce() -> Option<PathBuf>, on_error: &'static str) -> anyhow::Result<Cow<Path>> {
+            self.discord_ipc_path()
+                .as_deref()
+                .map(Cow::Borrowed)
+                .or_else(|| Some(Cow::Owned(find_socket_fn()?))
+                ).context(on_error)
         }
     }
 }
