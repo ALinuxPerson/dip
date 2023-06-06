@@ -25,7 +25,7 @@ something akin to this project, but, alas, I've found none. Due to this, I decid
 
 ## Instructions
 
-1. Go to releases and download the package meant for your operating system.
+1. Go to releases and download the package meant for your operating system (or compile it manually).
     * There are two binaries packaged for each operating system, the host and remote. Here is information as to which
       program is meant to be run on which computer.
      
