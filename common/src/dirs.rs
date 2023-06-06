@@ -5,10 +5,10 @@ use std::sync::OnceLock;
 static DIRS: OnceLock<ProjectDirs> = OnceLock::new();
 
 pub fn initialize() -> anyhow::Result<()> {
-    #[cfg(target_os = "linux")]
+    #[cfg(any(not(windows), not(target_os = "macos")))]
     let application = "dip";
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(any(windows, target_os = "macos"))]
     let application = "DIP";
 
     DIRS.set(
