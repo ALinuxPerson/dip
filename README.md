@@ -84,6 +84,26 @@ supported yet (although it is being worked on), and macOS is untested.**
 
 Example configurations of `host.toml` and `remote.toml` can be found here: [host.toml](host/host.toml), [remote.toml](remote/remote.toml)
 
+# OS Support
+
+* Linux
+
+Linux is officially supported as the author of this project uses Linux as their daily driver. If a specific distro were
+to be given more support though, it would be Arch Linux for the same reason why Linux is officially supported.
+
+* macOS
+
+macOS *theoretically* should be compatible, as it uses a Unix base just like Linux. However, it is untested, so use at 
+your own risk.
+
+* Windows
+
+Windows is currently not compatible due to a fundamental difference on how Discord implements IPC on Windows compared to
+Unix based platforms.
+
+On Windows, Discord uses named pipes for IPC. On Unix based platforms however, Unix Sockets are used. There isn't any
+support yet for named pipes, but it is being worked on.
+
 # Usage
 
 `dip_remote` should be launched first on the remote computer, then `dip_host` can be launched on the host computer.
