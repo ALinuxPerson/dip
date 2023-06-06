@@ -3,3 +3,6 @@
 
 ## The remote address that the host will connect and forward packets to.
 # remote_address = "192.168.86.31:49131"
+
+## Whether or not to keep the unix socket created by this program on exit. Default value is "false".
+# keep_socket = false
